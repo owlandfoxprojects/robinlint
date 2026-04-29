@@ -228,6 +228,40 @@
       line-height: 1.3;
     }
 
+    .api-key-notice {
+      display: flex;
+      gap: 6px;
+      align-items: flex-start;
+      margin-top: var(--spacing-03);
+      padding: 8px 10px;
+      background: var(--info-bg);
+      border-left: 2px solid var(--info);
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      line-height: 1.4;
+      color: var(--text-secondary);
+    }
+
+    .api-key-notice svg {
+      flex-shrink: 0;
+      color: var(--info);
+      margin-top: 1px;
+    }
+
+    .api-key-notice strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .api-key-notice a {
+      color: var(--info);
+      text-decoration: underline;
+    }
+
+    .api-key-notice a:hover {
+      opacity: 0.8;
+    }
+
     /* Collapsible Sections */
     .collapsible {
       margin-bottom: var(--spacing-05);
@@ -2326,6 +2360,14 @@
                 <span class="input-icon"><svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4 4v2h-.25A1.75 1.75 0 002 7.75v5.5c0 .966.784 1.75 1.75 1.75h8.5A1.75 1.75 0 0014 13.25v-5.5A1.75 1.75 0 0012.25 6H12V4a4 4 0 10-8 0zm6 2V4a2 2 0 10-4 0v2h4zm-5.25 2h6.5a.25.25 0 01.25.25v5.5a.25.25 0 01-.25.25h-8.5a.25.25 0 01-.25-.25v-5.5a.25.25 0 01.25-.25z"/></svg></span>
               </div>
               <p class="card-subtitle" id="api-key-hint">Your API key is stored securely in this session</p>
+              <div class="api-key-notice" id="api-key-notice">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                  <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM7.25 4.75a.75.75 0 0 1 1.5 0v3.5a.75.75 0 0 1-1.5 0v-3.5zM8 12a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+                </svg>
+                <span>
+                  <strong>API keys are billed separately</strong> from <span id="api-key-notice-subscription">Claude Pro / Claude Team</span> subscriptions. Create a key at <a href="https://platform.claude.com/settings/keys" id="api-key-portal-link" target="_blank" rel="noopener noreferrer">platform.claude.com</a> and add credits before using the plugin.
+                </span>
+              </div>
             </div>
 
             <!-- Model Selection (dynamic based on provider) -->
@@ -2771,20 +2813,29 @@
       anthropic: {
         name: 'Claude',
         placeholder: 'sk-ant-...',
-        hint: 'Get your API key from console.anthropic.com',
-        defaultModel: 'claude-sonnet-4-5-20250929'
+        hint: 'Get your API key from platform.claude.com',
+        defaultModel: 'claude-sonnet-4-5-20250929',
+        portalUrl: 'https://platform.claude.com/settings/keys',
+        portalLabel: 'platform.claude.com',
+        subscriptionName: 'Claude Pro / Claude Team'
       },
       openai: {
         name: 'OpenAI',
         placeholder: 'sk-...',
         hint: 'Get your API key from platform.openai.com',
-        defaultModel: 'gpt-5.2'
+        defaultModel: 'gpt-5.2',
+        portalUrl: 'https://platform.openai.com/api-keys',
+        portalLabel: 'platform.openai.com',
+        subscriptionName: 'ChatGPT Plus'
       },
       google: {
         name: 'Gemini',
         placeholder: 'AIza...',
         hint: 'Get your API key from aistudio.google.com',
-        defaultModel: 'gemini-2.5-pro'
+        defaultModel: 'gemini-2.5-pro',
+        portalUrl: 'https://aistudio.google.com/apikey',
+        portalLabel: 'aistudio.google.com',
+        subscriptionName: 'Gemini Advanced'
       }
     };
 
@@ -3916,6 +3967,17 @@
       if (modelLabel) modelLabel.textContent = config.name;
       if (apiKeyHint) apiKeyHint.textContent = config.hint;
       apiKeyInput.placeholder = config.placeholder;
+
+      // Update API-key-vs-subscription notice
+      const portalLink = document.getElementById('api-key-portal-link');
+      const subscriptionLabel = document.getElementById('api-key-notice-subscription');
+      if (portalLink) {
+        portalLink.href = config.portalUrl;
+        portalLink.textContent = config.portalLabel;
+      }
+      if (subscriptionLabel) {
+        subscriptionLabel.textContent = config.subscriptionName;
+      }
 
       // Restore saved API key for this provider (if any)
       apiKeyInput.value = providerApiKeys[selectedProvider] || '';

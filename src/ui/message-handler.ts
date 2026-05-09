@@ -42,7 +42,7 @@ import { FixRequest, FixPreviewRequest, BatchFixRequest } from '../types';
 
 // Plugin state
 let storedApiKey: string | null = null;
-let selectedModel = 'claude-sonnet-4-5-20250929'; // Default to Claude Sonnet 4.5
+let selectedModel = 'claude-sonnet-4-6'; // Default to Claude Sonnet 4.6
 let selectedProvider: ProviderId = 'anthropic'; // Default to Anthropic
 
 // Validate API key format based on provider
@@ -55,7 +55,11 @@ function isValidApiKeyFormat(apiKey: string, provider: ProviderId = selectedProv
     case 'openai':
       return trimmed.startsWith('sk-') && trimmed.length >= 20;
     case 'google':
-      return trimmed.startsWith('AIza') && trimmed.length >= 35;
+      return (
+        (trimmed.startsWith('AIza') || trimmed.startsWith('AQ.')) &&
+        trimmed.length >= 30 &&
+        trimmed.length <= 100
+      );
     default:
       return false;
   }

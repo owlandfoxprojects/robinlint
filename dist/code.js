@@ -1220,15 +1220,15 @@ Focus on creating a comprehensive DESIGN analysis that helps designers build sca
   };
   var DEFAULT_MODELS = {
     anthropic: "claude-sonnet-4-6",
-    openai: "gpt-5.4",
-    google: "gemini-3.1-pro-preview"
+    openai: "gpt-5.4-mini",
+    google: "gemini-3-flash-preview"
   };
 
   // src/api/providers/anthropic.ts
   var ANTHROPIC_MODELS = [
     {
-      id: "claude-opus-4-6",
-      name: "Claude Opus 4.6",
+      id: "claude-opus-4-7",
+      name: "Claude Opus 4.7",
       description: "Flagship model - Most intelligent, best for complex agents and coding",
       contextWindow: 1e6,
       isDefault: false
@@ -1424,18 +1424,18 @@ Focus on creating a comprehensive DESIGN analysis that helps designers build sca
   // src/api/providers/openai.ts
   var OPENAI_MODELS = [
     {
-      id: "gpt-5.4",
-      name: "GPT-5.4",
-      description: "Flagship model - Best intelligence for agentic, coding, and professional workflows",
+      id: "gpt-5.5",
+      name: "GPT-5.5",
+      description: "Flagship model - Frontier reasoning and agentic capabilities for complex coding and analysis",
       contextWindow: 1e6,
-      isDefault: true
+      isDefault: false
     },
     {
       id: "gpt-5.4-mini",
       name: "GPT-5.4 Mini",
-      description: "Standard model - Strong coding and reasoning at lower cost",
+      description: "Standard model - Strong coding and reasoning at lower cost, recommended for most tasks",
       contextWindow: 4e5,
-      isDefault: false
+      isDefault: true
     },
     {
       id: "gpt-5.4-nano",
@@ -1647,19 +1647,19 @@ Focus on creating a comprehensive DESIGN analysis that helps designers build sca
       name: "Gemini 3.1 Pro",
       description: "Flagship model - Advanced reasoning and agentic capabilities",
       contextWindow: 1e6,
-      isDefault: true
+      isDefault: false
     },
     {
       id: "gemini-3-flash-preview",
       name: "Gemini 3 Flash",
-      description: "Standard model - Frontier-class performance at lower cost",
+      description: "Standard model - Frontier-class performance at lower cost, recommended for most tasks",
       contextWindow: 1e6,
-      isDefault: false
+      isDefault: true
     },
     {
-      id: "gemini-2.5-flash",
-      name: "Gemini 2.5 Flash",
-      description: "Economy model - Best price-performance for high-volume tasks",
+      id: "gemini-3.1-flash-lite",
+      name: "Gemini 3.1 Flash-Lite",
+      description: "Economy model - GA workhorse optimized for low-latency, high-volume tasks",
       contextWindow: 1e6,
       isDefault: false
     }
@@ -1793,10 +1793,10 @@ Focus on creating a comprehensive DESIGN analysis that helps designers build sca
     /**
      * Validate Google API key format
      *
-     * Google API keys:
-     * - Start with 'AIza'
-     * - Are typically 39 characters long
-     * - Contain alphanumeric characters and underscores
+     * Google API keys come in two supported formats:
+     * - Standard keys: start with 'AIza', ~39 characters
+     * - Service-account-bound (authorization) keys: start with 'AQ.',
+     *   used by orgs with stricter security postures
      *
      * @param apiKey - The API key to validate
      * @returns Validation result
@@ -1815,19 +1815,20 @@ Focus on creating a comprehensive DESIGN analysis that helps designers build sca
           error: "API key cannot be empty"
         };
       }
-      if (!trimmedKey.startsWith(this.keyPrefix)) {
+      const hasValidPrefix = trimmedKey.startsWith("AIza") || trimmedKey.startsWith("AQ.");
+      if (!hasValidPrefix) {
         return {
           isValid: false,
-          error: `Google API keys should start with "${this.keyPrefix}". Please check your API key.`
+          error: 'Google API keys should start with "AIza" or "AQ." (service-account-bound). Please check your API key.'
         };
       }
-      if (trimmedKey.length < 30 || trimmedKey.length > 50) {
+      if (trimmedKey.length < 30 || trimmedKey.length > 100) {
         return {
           isValid: false,
           error: "API key appears to have an invalid length. Please verify you copied the complete key."
         };
       }
-      if (!/^[A-Za-z0-9_-]+$/.test(trimmedKey)) {
+      if (!/^[A-Za-z0-9._-]+$/.test(trimmedKey)) {
         return {
           isValid: false,
           error: "API key contains invalid characters"
@@ -5852,7 +5853,7 @@ ${scoringCriteria}
 
   // src/ui/message-handler.ts
   var storedApiKey = null;
-  var selectedModel = "claude-sonnet-4-5-20250929";
+  var selectedModel = "claude-sonnet-4-6";
   var selectedProvider = "anthropic";
   function isValidApiKeyFormat(apiKey, provider = selectedProvider) {
     const trimmed = (apiKey == null ? void 0 : apiKey.trim()) || "";
@@ -5862,7 +5863,7 @@ ${scoringCriteria}
       case "openai":
         return trimmed.startsWith("sk-") && trimmed.length >= 20;
       case "google":
-        return trimmed.startsWith("AIza") && trimmed.length >= 35;
+        return (trimmed.startsWith("AIza") || trimmed.startsWith("AQ.")) && trimmed.length >= 30 && trimmed.length <= 100;
       default:
         return false;
     }

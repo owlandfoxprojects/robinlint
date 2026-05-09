@@ -28,19 +28,19 @@ export const GOOGLE_MODELS: LLMModel[] = [
     name: 'Gemini 3.1 Pro',
     description: 'Flagship model - Advanced reasoning and agentic capabilities',
     contextWindow: 1000000,
-    isDefault: true,
+    isDefault: false,
   },
   {
     id: 'gemini-3-flash-preview',
     name: 'Gemini 3 Flash',
-    description: 'Standard model - Frontier-class performance at lower cost',
+    description: 'Standard model - Frontier-class performance at lower cost, recommended for most tasks',
     contextWindow: 1000000,
-    isDefault: false,
+    isDefault: true,
   },
   {
-    id: 'gemini-2.5-flash',
-    name: 'Gemini 2.5 Flash',
-    description: 'Economy model - Best price-performance for high-volume tasks',
+    id: 'gemini-3.1-flash-lite',
+    name: 'Gemini 3.1 Flash-Lite',
+    description: 'Economy model - GA workhorse optimized for low-latency, high-volume tasks',
     contextWindow: 1000000,
     isDefault: false,
   },
@@ -259,10 +259,10 @@ class GoogleProvider implements LLMProvider {
   /**
    * Validate Google API key format
    *
-   * Google API keys:
-   * - Start with 'AIza'
-   * - Are typically 39 characters long
-   * - Contain alphanumeric characters and underscores
+   * Google API keys come in two supported formats:
+   * - Standard keys: start with 'AIza', ~39 characters
+   * - Service-account-bound (authorization) keys: start with 'AQ.',
+   *   used by orgs with stricter security postures
    *
    * @param apiKey - The API key to validate
    * @returns Validation result
@@ -284,23 +284,22 @@ class GoogleProvider implements LLMProvider {
       };
     }
 
-    if (!trimmedKey.startsWith(this.keyPrefix)) {
+    const hasValidPrefix = trimmedKey.startsWith('AIza') || trimmedKey.startsWith('AQ.');
+    if (!hasValidPrefix) {
       return {
         isValid: false,
-        error: `Google API keys should start with "${this.keyPrefix}". Please check your API key.`,
+        error: 'Google API keys should start with "AIza" or "AQ." (service-account-bound). Please check your API key.',
       };
     }
 
-    // Google API keys are typically 39 characters
-    if (trimmedKey.length < 30 || trimmedKey.length > 50) {
+    if (trimmedKey.length < 30 || trimmedKey.length > 100) {
       return {
         isValid: false,
         error: 'API key appears to have an invalid length. Please verify you copied the complete key.',
       };
     }
 
-    // Check for valid characters (alphanumeric, underscore, hyphen)
-    if (!/^[A-Za-z0-9_-]+$/.test(trimmedKey)) {
+    if (!/^[A-Za-z0-9._-]+$/.test(trimmedKey)) {
       return {
         isValid: false,
         error: 'API key contains invalid characters',

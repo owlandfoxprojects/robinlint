@@ -338,14 +338,14 @@ export type ProviderRegistry = Record<ProviderId, LLMProvider>;
  * Anthropic (Claude) models configuration
  *
  * Available models:
- * - Claude Opus 4.6: Flagship model for complex agents and coding
+ * - Claude Opus 4.7: Flagship model for complex agents and coding
  * - Claude Sonnet 4.6: Standard balanced model (default)
  * - Claude Haiku 4.5: Economy model for quick tasks
  */
 export const ANTHROPIC_MODELS: LLMModel[] = [
   {
-    id: 'claude-opus-4-6',
-    name: 'Claude Opus 4.6',
+    id: 'claude-opus-4-7',
+    name: 'Claude Opus 4.7',
     description: 'Flagship model - Most intelligent, best for complex agents and coding',
     tier: 'flagship',
     contextWindow: 1000000,
@@ -376,28 +376,28 @@ export const ANTHROPIC_MODELS: LLMModel[] = [
  * OpenAI (GPT) models configuration
  *
  * Available models:
- * - GPT-5.4: Flagship model for agentic and professional workflows (default)
- * - GPT-5.4 Mini: Standard model for coding and reasoning
+ * - GPT-5.5: Flagship model for agentic and professional workflows
+ * - GPT-5.4 Mini: Standard model for coding and reasoning (default)
  * - GPT-5.4 Nano: Economy model for high-volume tasks
  */
 export const OPENAI_MODELS: LLMModel[] = [
   {
-    id: 'gpt-5.4',
-    name: 'GPT-5.4',
-    description: 'Flagship model - Best intelligence for agentic, coding, and professional workflows',
+    id: 'gpt-5.5',
+    name: 'GPT-5.5',
+    description: 'Flagship model - Frontier reasoning and agentic capabilities for complex coding and analysis',
     tier: 'flagship',
     contextWindow: 1000000,
     maxOutputTokens: 128000,
-    isDefault: true,
+    isDefault: false,
   },
   {
     id: 'gpt-5.4-mini',
     name: 'GPT-5.4 Mini',
-    description: 'Standard model - Strong coding and reasoning at lower cost',
+    description: 'Standard model - Strong coding and reasoning at lower cost, recommended for most tasks',
     tier: 'standard',
     contextWindow: 400000,
     maxOutputTokens: 128000,
-    isDefault: false,
+    isDefault: true,
   },
   {
     id: 'gpt-5.4-nano',
@@ -414,9 +414,9 @@ export const OPENAI_MODELS: LLMModel[] = [
  * Google (Gemini) models configuration
  *
  * Available models:
- * - Gemini 3.1 Pro: Flagship model with advanced reasoning (default)
- * - Gemini 3 Flash: Standard frontier-class model
- * - Gemini 2.5 Flash: Economy model for high-volume tasks
+ * - Gemini 3.1 Pro: Flagship model with advanced reasoning
+ * - Gemini 3 Flash: Standard frontier-class model (default)
+ * - Gemini 3.1 Flash-Lite: Economy GA model for high-volume tasks
  */
 export const GOOGLE_MODELS: LLMModel[] = [
   {
@@ -426,21 +426,21 @@ export const GOOGLE_MODELS: LLMModel[] = [
     tier: 'flagship',
     contextWindow: 1000000,
     maxOutputTokens: 64000,
-    isDefault: true,
+    isDefault: false,
   },
   {
     id: 'gemini-3-flash-preview',
     name: 'Gemini 3 Flash',
-    description: 'Standard model - Frontier-class performance at lower cost',
+    description: 'Standard model - Frontier-class performance at lower cost, recommended for most tasks',
     tier: 'standard',
     contextWindow: 1000000,
     maxOutputTokens: 64000,
-    isDefault: false,
+    isDefault: true,
   },
   {
-    id: 'gemini-2.5-flash',
-    name: 'Gemini 2.5 Flash',
-    description: 'Economy model - Best price-performance for high-volume tasks',
+    id: 'gemini-3.1-flash-lite',
+    name: 'Gemini 3.1 Flash-Lite',
+    description: 'Economy model - GA workhorse optimized for low-latency, high-volume tasks',
     tier: 'economy',
     contextWindow: 1000000,
     maxOutputTokens: 64000,
@@ -457,8 +457,8 @@ export const GOOGLE_MODELS: LLMModel[] = [
  */
 export const DEFAULT_MODELS: Record<ProviderId, string> = {
   anthropic: 'claude-sonnet-4-6',
-  openai: 'gpt-5.4',
-  google: 'gemini-3.1-pro-preview',
+  openai: 'gpt-5.4-mini',
+  google: 'gemini-3-flash-preview',
 };
 
 // =============================================================================
@@ -528,7 +528,7 @@ export function detectProviderFromKey(apiKey: string): ProviderId | undefined {
   if (trimmed.startsWith('sk-')) {
     return 'openai';
   }
-  if (trimmed.startsWith('AIza')) {
+  if (trimmed.startsWith('AIza') || trimmed.startsWith('AQ.')) {
     return 'google';
   }
 
@@ -551,7 +551,11 @@ export function validateApiKeyFormat(apiKey: string, providerId: ProviderId): bo
     case 'openai':
       return trimmed.startsWith('sk-') && trimmed.length >= 20;
     case 'google':
-      return trimmed.startsWith('AIza') && trimmed.length >= 35;
+      return (
+        (trimmed.startsWith('AIza') || trimmed.startsWith('AQ.')) &&
+        trimmed.length >= 30 &&
+        trimmed.length <= 100
+      );
     default:
       return false;
   }

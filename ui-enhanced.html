@@ -4177,7 +4177,7 @@
 
       switch (type) {
         case 'api-key-saved':
-          handleApiKeySaved(data.success, data.provider);
+          handleApiKeySaved(data.success, data.provider, data.error);
           break;
         case 'api-key-status':
           handleApiKeyStatus(data.hasKey, data.provider, data.model);
@@ -4276,7 +4276,7 @@
     }
 
     // Handle API Key Saved
-    function handleApiKeySaved(success, provider) {
+    function handleApiKeySaved(success, provider, error) {
       saveKeyButton.disabled = false;
       if (success) {
         // Ensure UI provider state matches what was saved
@@ -4299,15 +4299,18 @@
         // Update chat input state
         updateChatInputState();
       } else {
-        updateStatus('Failed to save API key', 'error');
+        // Surface the detailed error (e.g., "This looks like an OpenAI key...")
+        // instead of a generic message, so the user knows what to fix.
+        updateStatus(error || 'Failed to save API key', 'error');
       }
     }
 
     // Handle API Key Status
     function handleApiKeyStatus(hasKey, provider, model) {
-      apiKeySaved = hasKey;
-
-      // Restore saved provider and model selections
+      // Restore saved provider and model selections first. handleProviderChange()
+      // unconditionally resets `apiKeySaved = false` (it's also the user-driven
+      // dropdown handler), so we must assign apiKeySaved AFTER it runs — mirroring
+      // the order used in handleApiKeySaved().
       if (provider && providerSelect) {
         providerSelect.value = provider;
         // Trigger provider change to update labels, model visibility, etc.
@@ -4316,6 +4319,8 @@
       if (model && modelSelect) {
         modelSelect.value = model;
       }
+
+      apiKeySaved = hasKey;
 
       if (hasKey) {
         updateStatus('API key is configured', 'success');

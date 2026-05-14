@@ -1223,6 +1223,19 @@ Focus on creating a comprehensive DESIGN analysis that helps designers build sca
     openai: "gpt-5.4-mini",
     google: "gemini-3-flash-preview"
   };
+  function detectProviderFromKey(apiKey) {
+    const trimmed = apiKey.trim();
+    if (trimmed.startsWith("sk-ant-")) {
+      return "anthropic";
+    }
+    if (trimmed.startsWith("sk-")) {
+      return "openai";
+    }
+    if (trimmed.startsWith("AIza") || trimmed.startsWith("AQ.")) {
+      return "google";
+    }
+    return void 0;
+  }
 
   // src/api/providers/anthropic.ts
   var ANTHROPIC_MODELS = [
@@ -1271,9 +1284,6 @@ Focus on creating a comprehensive DESIGN analysis that helps designers build sca
         ],
         max_tokens: config.maxTokens
       };
-      if (config.temperature !== void 0) {
-        request.temperature = config.temperature;
-      }
       if (config.additionalParams) {
         Object.assign(request, config.additionalParams);
       }
@@ -1466,8 +1476,7 @@ Focus on creating a comprehensive DESIGN analysis that helps designers build sca
             content: config.prompt
           }
         ],
-        max_completion_tokens: config.maxTokens,
-        temperature: config.temperature
+        max_completion_tokens: config.maxTokens
       };
       if (config.additionalParams) {
         Object.assign(request, config.additionalParams);
@@ -1695,8 +1704,11 @@ Focus on creating a comprehensive DESIGN analysis that helps designers build sca
           }
         ],
         generationConfig: {
-          maxOutputTokens: config.maxTokens,
-          temperature: config.temperature
+          maxOutputTokens: config.maxTokens
+          // `config.temperature` intentionally omitted, matching the Anthropic and
+          // OpenAI providers. Newer flagship models across providers have begun
+          // rejecting non-default temperature values with HTTP 400. Determinism is
+          // enforced upstream via deterministic prompts and JSON extraction.
         }
       };
       if (config.additionalParams) {
@@ -5973,7 +5985,16 @@ ${scoringCriteria}
       const providerId = provider || selectedProvider;
       if (!isValidApiKeyFormat(apiKey, providerId)) {
         const providerObj2 = getProvider(providerId);
-        throw new Error(`Invalid API key format for ${providerObj2.name}. Expected format: ${providerObj2.keyPlaceholder}`);
+        const detected = detectProviderFromKey(apiKey);
+        if (detected && detected !== providerId) {
+          const detectedObj = getProvider(detected);
+          throw new Error(
+            `This looks like a ${detectedObj.name} key (${detectedObj.keyPlaceholder}), but ${providerObj2.name} is selected. Switch the AI Provider dropdown to ${detectedObj.name}, or paste a ${providerObj2.name} key (${providerObj2.keyPlaceholder}).`
+          );
+        }
+        throw new Error(
+          `Invalid ${providerObj2.name} API key format. Expected: ${providerObj2.keyPlaceholder}`
+        );
       }
       selectedProvider = providerId;
       storedApiKey = apiKey;

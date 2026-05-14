@@ -103,10 +103,10 @@ export class AnthropicProvider implements LLMProvider {
       max_tokens: config.maxTokens,
     };
 
-    // Add temperature for deterministic responses
-    if (config.temperature !== undefined) {
-      request.temperature = config.temperature;
-    }
+    // `config.temperature` is intentionally dropped for Anthropic. Newer Claude 4.x
+    // models reject `temperature` with HTTP 400 ("temperature is deprecated for this
+    // model"). Determinism is enforced upstream via deterministic prompts and JSON
+    // extraction, so omitting temperature is safe for both analyze and chat paths.
 
     // Add additional provider-specific parameters
     if (config.additionalParams) {

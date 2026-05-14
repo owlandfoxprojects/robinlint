@@ -135,7 +135,10 @@ class GoogleProvider implements LLMProvider {
       ],
       generationConfig: {
         maxOutputTokens: config.maxTokens,
-        temperature: config.temperature,
+        // `config.temperature` intentionally omitted, matching the Anthropic and
+        // OpenAI providers. Newer flagship models across providers have begun
+        // rejecting non-default temperature values with HTTP 400. Determinism is
+        // enforced upstream via deterministic prompts and JSON extraction.
       },
     };
 

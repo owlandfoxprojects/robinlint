@@ -10,6 +10,7 @@ import {
   ProviderId,
   callProvider,
   getProvider,
+  detectProviderFromKey,
   loadProviderConfig,
   saveProviderConfig,
   clearProviderKey,
@@ -196,7 +197,21 @@ async function handleSaveApiKey(apiKey: string, model?: string, provider?: strin
     // Validate API key format for the provider
     if (!isValidApiKeyFormat(apiKey, providerId)) {
       const providerObj = getProvider(providerId);
-      throw new Error(`Invalid API key format for ${providerObj.name}. Expected format: ${providerObj.keyPlaceholder}`);
+
+      // If the prefix matches a different known provider, name both so the user
+      // knows exactly which dropdown to switch (rather than guessing at the format).
+      const detected = detectProviderFromKey(apiKey);
+      if (detected && detected !== providerId) {
+        const detectedObj = getProvider(detected);
+        throw new Error(
+          `This looks like a ${detectedObj.name} key (${detectedObj.keyPlaceholder}), but ${providerObj.name} is selected. ` +
+          `Switch the AI Provider dropdown to ${detectedObj.name}, or paste a ${providerObj.name} key (${providerObj.keyPlaceholder}).`
+        );
+      }
+
+      throw new Error(
+        `Invalid ${providerObj.name} API key format. Expected: ${providerObj.keyPlaceholder}`
+      );
     }
 
     // Update state

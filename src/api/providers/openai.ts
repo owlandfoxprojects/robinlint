@@ -102,8 +102,13 @@ class OpenAIProviderClass implements LLMProvider {
         },
       ],
       max_completion_tokens: config.maxTokens,
-      temperature: config.temperature,
     };
+
+    // `config.temperature` is intentionally dropped for OpenAI. GPT-5.x flagship
+    // models reject non-default temperature with HTTP 400 ("Unsupported value:
+    // 'temperature' does not support 0.1 with this model. Only the default (1)
+    // value is supported."). Determinism is enforced upstream via deterministic
+    // prompts and JSON extraction, so omitting temperature is safe.
 
     // Merge any additional parameters
     if (config.additionalParams) {

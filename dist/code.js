@@ -2487,7 +2487,7 @@ Focus on creating a comprehensive DESIGN analysis that helps designers build sca
           path: currentPath
         });
       }
-      if ("children" in currentNode) {
+      if ("children" in currentNode && currentNode.type !== "INSTANCE") {
         for (let i = 0; i < currentNode.children.length; i++) {
           traverse(currentNode.children[i], depth + 1, currentPath);
         }

@@ -584,8 +584,12 @@ export function analyzeNamingIssues(
       });
     }
 
-    // Traverse children
-    if ('children' in currentNode) {
+    // Traverse children — but don't enter INSTANCE descendants. Layers inside
+    // an instance are owned by the source component (e.g. a third-party icon
+    // set) and are read-only: the user can't rename them without detaching the
+    // instance. Reporting them as issues is non-actionable noise that drags
+    // down the audit score.
+    if ('children' in currentNode && currentNode.type !== 'INSTANCE') {
       for (let i = 0; i < currentNode.children.length; i++) {
         traverse(currentNode.children[i], depth + 1, currentPath);
       }
@@ -993,8 +997,9 @@ export function applyNamingConvention(
       nodesToRename.push(currentNode);
     }
 
-    // Traverse children
-    if ('children' in currentNode) {
+    // Traverse children — skip INSTANCE descendants (read-only, owned by the
+    // source component; renaming them would silently fail).
+    if ('children' in currentNode && currentNode.type !== 'INSTANCE') {
       for (let i = 0; i < currentNode.children.length; i++) {
         collectNodes(currentNode.children[i], depth + 1);
       }
@@ -1114,8 +1119,10 @@ export function previewNamingConvention(
       willChange: shouldInclude && currentNode.name !== newName,
     };
 
-    // Build children previews
-    if ('children' in currentNode && depth < maxDepth) {
+    // Build children previews — skip INSTANCE descendants (read-only, owned by
+    // the source component; previewing a rename that can't be applied would
+    // mislead the user).
+    if ('children' in currentNode && currentNode.type !== 'INSTANCE' && depth < maxDepth) {
       preview.children = [];
       for (let i = 0; i < currentNode.children.length; i++) {
         preview.children.push(buildPreview(currentNode.children[i], depth + 1, newName));
